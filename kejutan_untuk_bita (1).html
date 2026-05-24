@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Misi Rahasia Untuk Bita!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Nunito", sans-serif;
+        background-color: #0f172a;
+        color: #f8fafc;
+        touch-action: manipulation;
+        overflow: hidden;
+      }
+
+      .pixel-font {
+        font-family: "Press Start 2P", cursive;
+      }
+
+      @keyframes pop {
+        0% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        70% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .animate-pop {
+        animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      @keyframes wiggle {
+        0%,
+        100% {
+          transform: rotate(-5deg);
+        }
+        50% {
+          transform: rotate(5deg);
+        }
+      }
+      .animate-wiggle {
+        animation: wiggle 0.5s ease-in-out infinite;
+      }
+
+      .game-container {
+        max-width: 480px;
+        margin: 0 auto;
+        height: 100dvh;
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #game-target {
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .click-feedback {
+        position: absolute;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fbbf24;
+        pointer-events: none;
+        animation: floatUp 0.5s ease-out forwards;
+        text-shadow: 2px 2px 0 #000;
+      }
+
+      @keyframes floatUp {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-30px) scale(1.5);
+          opacity: 0;
+        }
+      }
+
+      .neon-border {
+        box-shadow:
+          0 0 10px #f472b6,
+          0 0 20px #f472b6;
+        border: 2px solid #f472b6;
+      }
+
+      .cake {
+        position: relative;
+        width: 160px;
+        height: 100px;
+        background: #f472b6;
+        border-radius: 10px 10px 0 0;
+        border: 4px solid #831843;
+        box-shadow: inset 0 -20px 0 rgba(0, 0, 0, 0.1);
+      }
+      .cake::after {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -5px;
+        right: -5px;
+        height: 30px;
+        background: #fdf2f8;
+        border-radius: 20px;
+        box-shadow: 0 5px 0 #fbcfe8;
+      }
+      .candle {
+        position: absolute;
+        top: -45px;
+        left: 70px;
+        width: 20px;
+        height: 45px;
+        background: #fbbf24;
+        border: 2px solid #b45309;
+        border-radius: 4px;
+      }
+      .candle-stripes {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 5px,
+          #ef4444 5px,
+          #ef4444 10px
+        );
+      }
+      .flame {
+        position: absolute;
+        top: -35px;
+        left: 2px;
+        width: 16px;
+        height: 32px;
+        background: #facc15;
+        border-radius: 50% 50% 20% 20%;
+        box-shadow:
+          0 0 15px #facc15,
+          0 0 30px #f97316;
+        animation: flicker 0.4s infinite alternate;
+        transform-origin: bottom;
+        transition: all 0.5s;
+      }
+      @keyframes flicker {
+        0% {
+          transform: scale(1) rotate(-2deg);
+        }
+        100% {
+          transform: scale(0.9) rotate(2deg);
+          opacity: 0.8;
+        }
+      }
+      .flame.extinguished {
+        transform: scale(0);
+        opacity: 0;
+        box-shadow: none;
+      }
+      .smoke {
+        position: absolute;
+        top: -40px;
+        left: 5px;
+        width: 6px;
+        height: 6px;
+        background: #cbd5e1;
+        border-radius: 50%;
+        opacity: 0;
+        filter: blur(2px);
+      }
+      @keyframes puff {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateY(-50px) scale(3);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- BGM AUDIO -->
+    <audio id="bgm" src="lagu-ultah.mp3" loop preload="auto"></audio>
+
+    <div class="game-container overflow-hidden">
+      <!-- AUDIO TOGGLE -->
+      <button
+        onclick="toggleAudio()"
+        class="absolute top-4 right-4 z-50 text-2xl bg-black/30 p-2 rounded-full"
+      >
+        <span id="audio-icon">🔇</span>
+      </button>
+
+      <!-- SCREEN: START -->
+      <div
+        id="screen-start"
+        class="flex-1 flex flex-col items-center justify-center p-6 text-center z-10 animate-pop"
+      >
+        <div class="text-6xl mb-6">🤫</div>
+        <h1
+          class="text-3xl font-black mb-4 text-pink-400 pixel-font leading-snug"
+        >
+          Sistem<br />Keamanan
+        </h1>
+        <p class="text-lg mb-8 text-gray-300 font-bold">
+          Peringatan! Butuh verifikasi.<br />Apakah kamu Bita?
+        </p>
+        <button
+          onclick="startGame()"
+          class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-8 rounded-full text-xl transition transform hover:scale-105 shadow-[0_0_15px_rgba(236,72,153,0.6)] active:scale-95 w-full max-w-xs"
+        >
+          Ya, Aku Bita!
+        </button>
+      </div>
+
+      <!-- SCREEN: GAMEPLAY (Tap & Move) -->
+      <div id="screen-game" class="flex-1 flex-col hidden h-full w-full">
+        <div
+          class="bg-gray-900/50 p-4 border-b border-pink-500/30 flex justify-between items-center z-10 backdrop-blur-sm"
+        >
+          <div>
+            <div
+              class="text-pink-400 font-bold text-sm tracking-wider uppercase pixel-font"
+              id="level-display"
+            >
+              Level 1
+            </div>
+            <div class="text-white text-xl font-black mt-1" id="score-display">
+              0 / 30
+            </div>
+          </div>
+          <div id="timer-container" class="text-right hidden">
+            <div class="text-gray-400 text-xs font-bold uppercase">Waktu</div>
+            <div
+              class="text-yellow-400 text-2xl font-black pixel-font"
+              id="timer-display"
+            >
+              15s
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-indigo-900/80 p-3 text-center text-sm font-semibold text-indigo-100 shadow-md z-10"
+          id="instruction-display"
+        >
+          Instruksi
+        </div>
+        <div
+          id="play-area"
+          class="flex-1 relative w-full h-full overflow-hidden"
+        >
+          <div
+            id="game-target"
+            onclick="handleTargetClick(event)"
+            class="absolute transform -translate-x-1/2 -translate-y-1/2 text-7xl transition-all duration-300 ease-out flex items-center justify-center"
+          >
+            🏸
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: QUIZ -->
+      <div
+        id="screen-quiz"
+        class="flex-1 flex-col hidden h-full w-full p-6 justify-center items-center text-center"
+      >
+        <div class="text-4xl mb-4 animate-bounce">🤔</div>
+        <h2
+          class="text-xl font-black text-pink-400 mb-6 pixel-font"
+          id="quiz-level-display"
+        >
+          LEVEL X: KUIS!
+        </h2>
+        <div
+          class="bg-gray-800/80 border border-indigo-500 p-6 rounded-xl shadow-lg mb-8 w-full"
+        >
+          <p
+            id="quiz-question"
+            class="text-lg text-white font-bold leading-relaxed"
+          ></p>
+        </div>
+        <div id="quiz-options" class="flex flex-col gap-4 w-full max-w-sm">
+          <!-- Tombol Kuis Muncul di Sini -->
+        </div>
+      </div>
+
+      <!-- SCREEN: MESSAGE (Between Levels) -->
+      <div
+        id="screen-message"
+        class="absolute inset-0 bg-gray-900/95 z-50 flex flex-col items-center justify-center p-6 text-center hidden backdrop-blur-md"
+      >
+        <div id="msg-icon" class="text-6xl mb-4">🎉</div>
+        <h2
+          id="msg-title"
+          class="text-2xl font-black text-pink-400 mb-2 pixel-font"
+        >
+          BERHASIL!
+        </h2>
+        <p id="msg-text" class="text-lg text-gray-200 mb-8 font-semibold">
+          Teks
+        </p>
+        <button
+          onclick="nextLevel()"
+          id="btn-next-level"
+          class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transform transition hover:scale-105 active:scale-95"
+        >
+          Gas Lanjut! 🚀
+        </button>
+      </div>
+
+      <!-- SCREEN: GAME OVER -->
+      <div
+        id="screen-gameover"
+        class="absolute inset-0 bg-red-900/95 z-50 flex flex-col items-center justify-center p-6 text-center hidden backdrop-blur-md"
+      >
+        <div class="text-7xl mb-4">💀</div>
+        <h2 class="text-2xl font-black text-red-400 mb-2 pixel-font">GAGAL!</h2>
+        <p id="gameover-text" class="text-lg text-gray-200 mb-8 font-semibold">
+          Lemah banget bestie, coba lagi!
+        </p>
+        <button
+          onclick="retryLevel()"
+          class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transform transition hover:scale-105 active:scale-95"
+        >
+          Ulangi Level 🔄
+        </button>
+      </div>
+
+      <!-- SCREEN: FINAL SURPRISE (Stage 20) -->
+      <div
+        id="screen-final"
+        class="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-pink-900 z-50 flex flex-col items-center justify-start p-6 text-center hidden overflow-y-auto overflow-x-hidden pt-12"
+      >
+        <!-- CAKE SECTION (Before Blow) -->
+        <div
+          id="cake-section"
+          class="w-full flex flex-col items-center mt-20 animate-pop"
+        >
+          <h2
+            class="text-xl md:text-2xl font-black text-yellow-300 pixel-font mb-4 leading-relaxed"
+          >
+            LEVEL 20: FINAL!
+          </h2>
+          <p
+            class="text-lg text-white mb-12 font-bold bg-black/30 p-4 rounded-xl"
+          >
+            Dekatkan mulut ke Mic HP dan <br /><span
+              class="text-pink-400 text-2xl font-black"
+              >TIUP LILINNYA! 💨</span
+            >
+          </p>
+
+          <div class="relative w-40 h-32 flex justify-center mb-10">
+            <div class="cake">
+              <div class="candle">
+                <div class="candle-stripes"></div>
+                <div class="flame" id="candle-flame"></div>
+                <div class="smoke" id="candle-smoke"></div>
+              </div>
+            </div>
+          </div>
+
+          <p id="mic-status" class="text-sm text-gray-300 animate-pulse">
+            Menunggu suara tiupan...
+          </p>
+
+          <!-- Fallback button if Mic fails or not supported -->
+          <button
+            onclick="blowOutCandle()"
+            id="fallback-blow-btn"
+            class="mt-8 bg-gray-700 text-white text-sm py-2 px-4 rounded-full opacity-50 hover:opacity-100"
+          >
+            (Pencet ini kalo Mic error)
+          </button>
+        </div>
+
+        <!-- MESSAGE SECTION (After Blow) -->
+        <div
+          id="message-section"
+          class="w-full max-w-sm mt-4 hidden animate-pop"
+        >
+          <h1
+            class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-yellow-400 pixel-font mb-6 leading-tight"
+          >
+            HAPPY BIRTHDAY!
+          </h1>
+
+          <!-- GANTI FOTO BITA DI SINI -->
+          <div class="relative w-48 h-48 mx-auto mb-6">
+            <div
+              class="absolute inset-0 rounded-full neon-border animate-pulse"
+            ></div>
+            <img
+              src="foto-mauldy.jpeg"
+              alt="Bita"
+              class="w-full h-full object-cover rounded-full border-4 border-gray-900 relative z-10 shadow-2xl"
+            />
+            <div class="absolute -top-2 -left-2 text-3xl z-20 animate-wiggle">
+              🍣
+            </div>
+            <div
+              class="absolute -bottom-2 -right-2 text-3xl z-20 animate-wiggle"
+              style="animation-delay: 0.2s"
+            >
+              🏸
+            </div>
+          </div>
+
+          <div
+            class="bg-gray-900/60 backdrop-blur-md rounded-2xl p-6 border border-pink-500/30 shadow-xl text-left"
+          >
+            <h2
+              class="text-xl font-bold text-pink-300 mb-2 border-b border-pink-500/30 pb-2"
+            >
+              Dear, Mauldy Ofra Tabita ✨
+            </h2>
+            <p
+              class="text-gray-200 text-sm md:text-base leading-relaxed space-y-3 font-semibold"
+            >
+              <span class="block mb-2"
+                >Selamat Ulang Tahun yang ke-24, gadis geulis kelahiran Bandung
+                24 Mei 2002! 🎉</span
+              >
+              <span class="block mb-2"
+                >Semoga karirnya sebagai Akuntan di Badan Gizi Nasional makin
+                sukses dan balance terus laporannya. Smash lu di lapangan
+                badminton makin tajam, dan api TikTok kita (yang udah 251 hari
+                ini 🔥) nyala terus!</span
+              >
+              <span class="block mb-2"
+                >Makasih ya udah selalu nemenin discord-an, entah pas lagi kerja
+                bareng sampe sleepcall-an nemenin tidur dari pertama kali kita
+                kenal tanggal 23 Juli 2025.</span
+              >
+              <span class="block mb-2"
+                >Maafin aku kalau kadang ngeselin, bikin kamu ngambek trus off
+                call tiba-tiba (walaupun ujung-ujungnya kamu nanyain
+                <span class="text-pink-400 italic"
+                  >"kenapa gak call balik ihh"</span
+                >
+                🤣), atau pas aku bales chat WA cuma pake stiker doang yang
+                bikin kamu ngamuk. Dan tenang aja, aku bakal rajin cukur jenggot
+                biar disayang Bita terus (tapi kumisan doang boleh lah ya?
+                🧔).</span
+              >
+              <span class="block text-yellow-300 font-bold mt-4 text-center"
+                >Semoga hari ini banyak rezeki biar bisa jajan Belly Salmon,
+                Sate Maranggi, dan Seblak Ikan Asin pake sambel yang banyak.
+                Happy Birthday, Bita sayang! 🍣🍡🐟☕</span
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 20 STAGES OF BITA'S FUN FACTS (Semua Mode Tangkap Bergerak, 2 Tap = 1 Detik)
+      const stages = [
+        {
+          level: 1,
+          type: "move",
+          target: 30,
+          time: 15,
+          icon: "🏸",
+          speed: "fast",
+          instruction: "Level 1: Pemanasan! Tangkap kok 30x dalam 15 detik!",
+          winTitle: "OKE",
+          winMsg: "Pemanasan jarinya lulus.",
+        },
+        {
+          level: 2,
+          type: "move",
+          target: 32,
+          time: 16,
+          icon: "🍣",
+          speed: "fast",
+          instruction:
+            "Level 2: Belly Salmon lari! Tangkap 32x dalam 16 detik!",
+          winTitle: "NYAM",
+          winMsg: "Langsung laper ngebayangin salmon.",
+        },
+        {
+          level: 3,
+          type: "quiz",
+          icon: "😡",
+          question:
+            "Kalo chat terakhir di WA cuma dibales stiker doang sama aku, Bita bakal ngapain?",
+          options: [
+            "Bales stiker juga dong",
+            "Ngamuk-ngamuk",
+            "Biasa aja sabar",
+          ],
+          answer: 1,
+          failMsg: "Salah! Bita kan benci banget dibales stiker doang!",
+          winTitle: "BENER BANGET",
+          winMsg: "Mode maung Bandung langsung keluar deh.",
+        },
+        {
+          level: 4,
+          type: "move",
+          target: 34,
+          time: 17,
+          icon: "📊",
+          speed: "fast",
+          instruction:
+            "Level 4: Akuntan ngitung cepat! Tangkap 34x dalam 17 detik!",
+          winTitle: "BALANCE",
+          winMsg: "Laporan aman, gajiku aman!",
+        },
+        {
+          level: 5,
+          type: "move",
+          target: 36,
+          time: 18,
+          icon: "🍡",
+          speed: "fast",
+          instruction:
+            "Level 5: Mamang Sate lewat! Tangkap 36x dalam 18 detik!",
+          winTitle: "DAPET",
+          winMsg: "Wanginya nyampe ke idung nih.",
+        },
+        {
+          level: 6,
+          type: "quiz",
+          icon: "📱",
+          question:
+            "Kalo Bita tiba-tiba off Video Call karena ngambek trus aku biarin bentar, dia bakal nge-chat:",
+          options: [
+            "'Yaudah bye!'",
+            "'Kenapa gak call balik ihh 😡'",
+            "'Aku tidur ya, awas aja'",
+          ],
+          answer: 1,
+          failMsg: "Salah! Bita pasti ngarep ditelpon balik lah wkwk.",
+          winTitle: "HAHAHA",
+          winMsg: "Gengsi gede tapi tetep nyariin ya!",
+        },
+        {
+          level: 7,
+          type: "move",
+          target: 38,
+          time: 19,
+          icon: "🐟",
+          speed: "fast",
+          instruction:
+            "Level 7: Tumbuk Ikan Asin gesit! Tangkap 38x dalam 19 detik!",
+          winTitle: "PEDES",
+          winMsg: "Aromanya semerbak, mantap bikin nambah nasi.",
+        },
+        {
+          level: 8,
+          type: "move",
+          target: 40,
+          time: 20,
+          icon: "🎧",
+          speed: "fast",
+          instruction:
+            "Level 8: Ngejar icon Discord! Tangkap 40x dalam 20 detik!",
+          winTitle: "CONNECTED",
+          winMsg: "Halo? Bita udah tidur belum?",
+        },
+        {
+          level: 9,
+          type: "quiz",
+          icon: "🧔",
+          question: "Tipe cowok idaman Bita soal rambut di wajah itu gimana?",
+          options: [
+            "Klimis mulus kaya oppa",
+            "Kumisan YES, Jenggotan NO",
+            "Brewok lebat kaya Viking",
+          ],
+          answer: 1,
+          failMsg: "Masa sih? Bita kan geli kalo cowok jenggotan!",
+          winTitle: "CAKEP",
+          winMsg: "Siap laksanakan! Kumisan tipis-tipis gass!",
+        },
+        {
+          level: 10,
+          type: "move",
+          target: 42,
+          time: 21,
+          icon: "🔥",
+          speed: "fast",
+          instruction:
+            "Level 10: Amankan Api TikTok! Tangkap 42x dalam 21 detik!",
+          winTitle: "STREAK AMAN",
+          winMsg: "Gila udah 251 hari woy, jangan sampe putus!",
+        },
+        {
+          level: 11,
+          type: "move",
+          target: 44,
+          time: 22,
+          icon: "🍜",
+          speed: "fast",
+          instruction:
+            "Level 11: Seblak super ngebut! Tangkap 44x dalam 22 detik!",
+          winTitle: "HUHAH",
+          winMsg: "Awas lambungnya kaget makan beginian cepet-cepet.",
+        },
+        {
+          level: 12,
+          type: "move",
+          target: 46,
+          time: 23,
+          icon: "🍣",
+          speed: "fast",
+          instruction: "Level 12: Rebutan Sashimi! Tangkap 46x dalam 23 detik!",
+          winTitle: "KENYANG",
+          winMsg: "Puas banget makan salmon perut sampe begah.",
+        },
+        {
+          level: 13,
+          type: "quiz",
+          icon: "🗓️",
+          question: "Kapan sih tanggal bersejarah kita pertama kali kenal?",
+          options: ["24 Mei 2002", "23 Juli 2025", "1 Januari 2026"],
+          answer: 1,
+          failMsg: "Wah parah, masa lupa tanggal jadian/kenal!",
+          winTitle: "SWEET",
+          winMsg: "Gak kerasa ya udah nemenin dari 23 Juli 2025.",
+        },
+        {
+          level: 14,
+          type: "move",
+          target: 48,
+          time: 24,
+          icon: "🧮",
+          speed: "fast",
+          instruction:
+            "Level 14: Kalkulator BGN jatoh! Tangkap 48x dalam 24 detik!",
+          winTitle: "GESIT",
+          winMsg: "Jago juga refleks lu nangkep kalkulator.",
+        },
+        {
+          level: 15,
+          type: "move",
+          target: 50,
+          time: 25,
+          icon: "💬",
+          speed: "fast",
+          instruction:
+            "Level 15: Spam chat ngambek! Tangkap 50x dalam 25 detik!",
+          winTitle: "BERISIK",
+          winMsg: "Iya iya ini di call balik bawel!",
+        },
+        {
+          level: 16,
+          type: "move",
+          target: 52,
+          time: 26,
+          icon: "☕",
+          speed: "fast",
+          instruction: "Level 16: Kopi mau tumpah! Tangkap 52x dalam 26 detik!",
+          winTitle: "SELAMAT",
+          winMsg: "Hampir aja keyboard lengket kena kopi.",
+        },
+        {
+          level: 17,
+          type: "quiz",
+          icon: "🎂",
+          question:
+            "Siapa cewek Bandung cantik kelairan 24 Mei 2002 yang lagi ultah ke-24 hari ini?",
+          options: ["Anya Geraldine", "Ceu Edoh", "Bita (Mauldy Ofra Tabita)"],
+          answer: 2,
+          failMsg: "Berani-beraninya lu salah pilih cewek!",
+          winTitle: "YAAAAAS",
+          winMsg: "The one and only! Neng Bita!",
+        },
+        {
+          level: 18,
+          type: "move",
+          target: 54,
+          time: 27,
+          icon: "😡",
+          speed: "fast",
+          instruction:
+            "Level 18: Bita ngamuk brutal! Tangkap 54x dalam 27 detik!",
+          winTitle: "SABAR",
+          winMsg: "Tarik napas hembuskan... jangan marah marah terus.",
+        },
+        {
+          level: 19,
+          type: "move",
+          target: 56,
+          time: 28,
+          icon: "💤",
+          speed: "fast",
+          instruction:
+            "Level 19: Nahan ngantuk parah! Tangkap 56x dalam 28 detik!",
+          winTitle: "MELEK",
+          winMsg: "GILA LU TAMAT JUGA!! Siap-siap buka hadiahnya...",
+        },
+        { level: 20, type: "final" }, // Cake Blow
+      ];
+
+      let currentLevelIndex = 0;
+      let score = 0;
+      let timeLeft = 0;
+      let timerInterval = null;
+      let playAreaBounds = { width: 0, height: 0 };
+      let bgmAudio = document.getElementById("bgm");
+      let isAudioPlaying = false;
+
+      const screens = {
+        start: document.getElementById("screen-start"),
+        game: document.getElementById("screen-game"),
+        quiz: document.getElementById("screen-quiz"),
+        message: document.getElementById("screen-message"),
+        gameover: document.getElementById("screen-gameover"),
+        final: document.getElementById("screen-final"),
+      };
+
+      // Audio Toggle
+      function toggleAudio() {
+        if (isAudioPlaying) {
+          bgmAudio.pause();
+          document.getElementById("audio-icon").innerText = "🔇";
+        } else {
+          bgmAudio.play().catch((e) => console.log(e));
+          document.getElementById("audio-icon").innerText = "🔊";
+        }
+        isAudioPlaying = !isAudioPlaying;
+      }
+
+      function showScreen(screenName) {
+        Object.values(screens).forEach((s) => {
+          s.classList.add("hidden");
+          s.classList.remove("flex");
+        });
+        screens[screenName].classList.remove("hidden");
+        screens[screenName].classList.add("flex");
+
+        if (screenName === "game") {
+          setTimeout(() => {
+            playAreaBounds.width =
+              document.getElementById("play-area").clientWidth;
+            playAreaBounds.height =
+              document.getElementById("play-area").clientHeight;
+          }, 50);
+        }
+      }
+
+      function startGame() {
+        // Attempt to play music
+        bgmAudio
+          .play()
+          .then(() => {
+            isAudioPlaying = true;
+            document.getElementById("audio-icon").innerText = "🔊";
+          })
+          .catch((e) =>
+            console.log(
+              "BGM Autoplay blocked, user must toggle audio manually.",
+            ),
+          );
+
+        currentLevelIndex = 0;
+        loadLevel();
+      }
+
+      function loadLevel() {
+        const stage = stages[currentLevelIndex];
+        score = 0;
+        clearInterval(timerInterval);
+
+        if (stage.type === "quiz") {
+          setupQuiz(stage);
+          return;
+        }
+        if (stage.type === "final") {
+          showScreen("final");
+          setupMic();
+          return;
+        }
+
+        // Game Move Setup
+        document.getElementById("level-display").innerText =
+          `LEVEL ${stage.level}`;
+        document.getElementById("score-display").innerText =
+          `0 / ${stage.target}`;
+        document.getElementById("instruction-display").innerText =
+          stage.instruction;
+
+        let elTarget = document.getElementById("game-target");
+        elTarget.innerText = stage.icon;
+        elTarget.className = `absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center transition-all ease-out z-20 ${stage.speed === "fast" ? "duration-150 text-5xl" : "duration-300 text-7xl"}`;
+
+        elTarget.classList.remove("animate-pulse");
+        elTarget.classList.add("animate-wiggle");
+        setTimeout(() => moveTarget(), 100);
+
+        if (stage.time) {
+          timeLeft = stage.time;
+          document.getElementById("timer-container").classList.remove("hidden");
+          document.getElementById("timer-display").innerText = `${timeLeft}s`;
+          document
+            .getElementById("timer-display")
+            .classList.remove("text-red-500");
+          document
+            .getElementById("timer-display")
+            .classList.add("text-yellow-400");
+
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById("timer-display").innerText = `${timeLeft}s`;
+            if (timeLeft <= 3) {
+              document
+                .getElementById("timer-display")
+                .classList.remove("text-yellow-400");
+              document
+                .getElementById("timer-display")
+                .classList.add("text-red-500", "animate-pulse");
+            }
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              gameOver("Waktu Habis! Jari lu kurang gesit.");
+            }
+          }, 1000);
+        } else {
+          document.getElementById("timer-container").classList.add("hidden");
+        }
+
+        showScreen("game");
+      }
+
+      // QUIZ LOGIC
+      function setupQuiz(stage) {
+        document.getElementById("quiz-level-display").innerText =
+          `LEVEL ${stage.level}: KUIS!`;
+        document.getElementById("quiz-question").innerText = stage.question;
+        const optionsContainer = document.getElementById("quiz-options");
+        optionsContainer.innerHTML = "";
+
+        stage.options.forEach((opt, index) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-lg shadow-md transform transition hover:scale-105 active:scale-95 text-sm";
+          btn.innerText = opt;
+          btn.onclick = () => checkQuiz(index, stage.answer, stage.failMsg);
+          optionsContainer.appendChild(btn);
+        });
+        showScreen("quiz");
+      }
+
+      function checkQuiz(selectedIndex, correctIndex, failMsg) {
+        if (selectedIndex === correctIndex) {
+          levelComplete();
+        } else {
+          gameOver(failMsg);
+        }
+      }
+
+      // ACTION LOGIC
+      function handleTargetClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const stage = stages[currentLevelIndex];
+        score++;
+        document.getElementById("score-display").innerText =
+          `${score} / ${stage.target}`;
+        createClickEffect(e.clientX, e.clientY);
+
+        let elTarget = document.getElementById("game-target");
+        elTarget.style.transform = "translate(-50%, -50%) scale(0.8)";
+        setTimeout(() => {
+          elTarget.style.transform = "translate(-50%, -50%) scale(1.1)";
+          setTimeout(
+            () => (elTarget.style.transform = "translate(-50%, -50%) scale(1)"),
+            100,
+          );
+        }, 50);
+
+        if (score >= stage.target) {
+          levelComplete();
+          return;
+        }
+
+        // Karena semua stage saat ini adalah tipe 'move', langsung pindahkan target
+        moveTarget();
+      }
+
+      function moveTarget() {
+        const padding = 50;
+        const maxX = playAreaBounds.width - padding;
+        const maxY = playAreaBounds.height - padding;
+        const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+        const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+        let elTarget = document.getElementById("game-target");
+        elTarget.style.left = `${randomX}px`;
+        elTarget.style.top = `${randomY}px`;
+      }
+
+      function createClickEffect(x, y) {
+        const words = ["BAM!", "HAP!", "NICE!", "Kena!"];
+        const word = words[Math.floor(Math.random() * words.length)];
+        const el = document.createElement("div");
+        el.className = "click-feedback pixel-font text-xs";
+        el.innerText = word;
+
+        const rect = document.body.getBoundingClientRect();
+        el.style.left = `${x - rect.left - 20}px`;
+        el.style.top = `${y - rect.top - 20}px`;
+
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 500);
+      }
+
+      function levelComplete() {
+        clearInterval(timerInterval);
+        const stage = stages[currentLevelIndex];
+
+        document.getElementById("msg-title").innerText = stage.winTitle;
+        document.getElementById("msg-text").innerText = stage.winMsg;
+        document.getElementById("msg-icon").innerText = stage.icon;
+        document.getElementById("btn-next-level").innerText =
+          currentLevelIndex === stages.length - 2
+            ? "MASUK FINAL! 🔥"
+            : "Gas Lanjut! 🚀";
+
+        showScreen("message");
+      }
+
+      function gameOver(msg) {
+        clearInterval(timerInterval);
+        document.getElementById("gameover-text").innerText = msg;
+        showScreen("gameover");
+      }
+
+      function retryLevel() {
+        loadLevel();
+      }
+
+      function nextLevel() {
+        currentLevelIndex++;
+        loadLevel();
+      }
+
+      // ==========================================
+      // MICROPHONE BLOWING LOGIC (STAGE 20)
+      // ==========================================
+      let audioContext;
+      let analyser;
+      let microphone;
+      let isBlown = false;
+
+      async function setupMic() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          audioContext = new (
+            window.AudioContext || window.webkitAudioContext
+          )();
+          analyser = audioContext.createAnalyser();
+          microphone = audioContext.createMediaStreamSource(stream);
+          microphone.connect(analyser);
+          analyser.fftSize = 256;
+          detectBlow();
+        } catch (err) {
+          console.error("Mic error:", err);
+          document.getElementById("mic-status").innerText =
+            "Mic tidak dapat diakses 😢";
+          document
+            .getElementById("fallback-blow-btn")
+            .classList.remove("opacity-50");
+        }
+      }
+
+      function detectBlow() {
+        if (isBlown) return;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        // Hanya mengecek frekuensi rendah (suara tiupan/angin cenderung nge-bass/frekuensi rendah)
+        for (let i = 0; i < 20; i++) {
+          sum += dataArray[i];
+        }
+        let average = sum / 20;
+
+        // Threshold sensitivitas tiupan
+        if (average > 180) {
+          blowOutCandle();
+        } else {
+          requestAnimationFrame(detectBlow);
+        }
+      }
+
+      function blowOutCandle() {
+        if (isBlown) return;
+        isBlown = true;
+
+        // Stop Mic
+        if (microphone) microphone.disconnect();
+
+        // CSS Changes for extinguishing
+        const flame = document.getElementById("candle-flame");
+        const smoke = document.getElementById("candle-smoke");
+
+        flame.classList.add("extinguished");
+        smoke.style.animation = "puff 2s forwards";
+
+        document.getElementById("mic-status").innerText = "Wushhh! Lilin mati~";
+        document.getElementById("fallback-blow-btn").style.display = "none";
+
+        // Menampilkan Surat setelah 1.5 detik
+        setTimeout(() => {
+          document.getElementById("cake-section").classList.add("hidden");
+          document.getElementById("message-section").classList.remove("hidden");
+          createConfetti();
+        }, 1500);
+      }
+
+      // Efek Confetti (Kertas warna warni jatuh)
+      function createConfetti() {
+        const colors = ["#f472b6", "#fbbf24", "#38bdf8", "#a78bfa", "#34d399"];
+        for (let i = 0; i < 80; i++) {
+          const confetti = document.createElement("div");
+          confetti.style.position = "fixed";
+          confetti.style.width = "10px";
+          confetti.style.height = "10px";
+          confetti.style.backgroundColor =
+            colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.left = Math.random() * 100 + "vw";
+          confetti.style.top = "-10px";
+          confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+          confetti.style.zIndex = "9999";
+
+          const duration = Math.random() * 3 + 2;
+          confetti.style.transition = `top ${duration}s ease-in, transform ${duration}s linear, opacity ${duration}s ease-in`;
+
+          document.body.appendChild(confetti);
+          confetti.getBoundingClientRect(); // reflow
+
+          confetti.style.top = "100vh";
+          confetti.style.transform = `rotate(${Math.random() * 720}deg)`;
+          confetti.style.opacity = "0";
+
+          setTimeout(() => confetti.remove(), duration * 1000);
+        }
+      }
+
+      window.addEventListener("resize", () => {
+        if (!screens.game.classList.contains("hidden")) {
+          playAreaBounds.width =
+            document.getElementById("play-area").clientWidth;
+          playAreaBounds.height =
+            document.getElementById("play-area").clientHeight;
+          const stage = stages[currentLevelIndex];
+          if (stage && stage.type === "move") moveTarget();
+        }
+      });
+    </script>
+  </body>
+</html>
